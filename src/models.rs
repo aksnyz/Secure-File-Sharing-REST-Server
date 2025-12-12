@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-// --- USER MODEL ---
+//USER MODEL
 // Represents a registered user in the database.
 // Requirement: User Registration & Login [cite: 57, 58]
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
@@ -11,7 +11,7 @@ pub struct User {
     pub password_hash: String,    // Securely hashed password (Argon2)
 }
 
-// --- FILE MODEL ---
+//FILE MODEL
 // Represents a file uploaded to the server.
 // Requirement: File Upload with metadata [cite: 60]
 #[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
