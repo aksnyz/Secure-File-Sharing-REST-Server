@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Sharing Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input[type="text"], input[type="password"] { padding: 10px; margin-bottom: 10px; width: 100%; box-sizing: border-box; }
+        button { padding: 10px 15px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #45a049; }
+        h2 { margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .file-entry { margin: 10px 0; padding: 10px; border-bottom: 1px dotted #ccc; display: flex; justify-content: space-between; align-items: center; }
+        #auth-status, #upload-status, #file-list-status { font-weight: bold; margin-top: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Rust File Server</h1>
+    <div id="status-message">System Ready.</div>
+    <hr>
+
+    <h2>1. Register / Login</h2>
+    <input type="text" id="username" placeholder="Username (np. student)">
+    <input type="password" id="password" placeholder="Password (np. tajnehaslo)">
+    <button onclick="handleAuth('/register')">Register</button>
+    <button onclick="handleAuth('/login')">Login</button>
+    <div id="auth-status"></div>
+
+    <hr>
+
+    <h2>2. Upload File</h2>
+    <input type="file" id="file-input">
+    <button onclick="uploadFile()">Upload</button>
+    <div id="upload-status"></div>
+
+    <hr>
+
+    <h2>3. My Files & Download</h2>
+    <button onclick="listFiles()">Refresh File List</button>
+    <div id="file-list-status"></div>
+    <ul id="file-list" style="list-style-type: none; padding: 0;"></ul>
+</div>
+
+<script>
+    let JWT_TOKEN = localStorage.getItem('jwt_token') || null;
+
+    function updateStatus(elementId, message, color) {
+        const el = document.getElementById(elementId);
+        el.textContent = message;
+        el.style.color = color;
+    }
+
+    if (JWT_TOKEN) updateStatus('auth-status', 'Token found via LocalStorage.', 'blue');
+
+    //AUTH
+    async function handleAuth(endpoint) {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+
+            const text = await response.text();
+            let data = {};
+            try { data = JSON.parse(text); } catch(e) {}
+
+            if (response.ok) {
+                updateStatus('auth-status', 'Success!', 'green');
+                if (data.token) {
+                    JWT_TOKEN = data.token;
+                    localStorage.setItem('jwt_token', JWT_TOKEN);
+                    updateStatus('auth-status', 'Logged in successfully.', 'green');
+                    listFiles(); //refresh after login
+                }
+            } else {
+                updateStatus('auth-status', `Error: ${text}`, 'red');
+            }
+        } catch (error) {
+            updateStatus('auth-status', `Network error: ${error.message}`, 'red');
+        }
+    }
+
+    //UPLOAD
+    async function uploadFile() {
+        if (!JWT_TOKEN) return updateStatus('upload-status', 'Please log in first.', 'red');
+
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (!file) return updateStatus('upload-status', 'Select a file first.', 'red');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            updateStatus('upload-status', 'Uploading...', 'blue');
+            const response = await fetch('/file/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${JWT_TOKEN}` },
+                body: formData
+            });
+
+            if (response.ok) {
+                updateStatus('upload-status', 'Upload successful!', 'green');
+                listFiles(); // Odśwież listę
+            } else {
+                const text = await response.text();
+                updateStatus('upload-status', `Failed: ${text}`, 'red');
+            }
+        } catch (error) {
+            updateStatus('upload-status', `Error: ${error.message}`, 'red');
+        }
+    }
+
+    //LIST & DOWNLOAD
+    async function listFiles() {
+        if (!JWT_TOKEN) return updateStatus('file-list-status', 'Log in to see files.', 'red');
+        const listUl = document.getElementById('file-list');
+        listUl.innerHTML = '';
+
+        try {
+            const response = await fetch('/file/list', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
+            });
+
+            if (response.ok) {
+                const files = await response.json();
+                updateStatus('file-list-status', `Found ${files.length} files.`, 'green');
+
+                files.forEach(file => {
+                    const li = document.createElement('li');
+                    li.className = 'file-entry';
+                    li.innerHTML = `
+                            <span><b>${file.name}</b> (ID: ${file.id})</span>
+                            <button onclick="downloadFile(${file.id})">Download ⬇️</button>
+                        `;
+                    listUl.appendChild(li);
+                });
+            } else {
+                updateStatus('file-list-status', 'Failed to fetch list.', 'red');
+            }
+        } catch (error) {
+            updateStatus('file-list-status', `Error: ${error.message}`, 'red');
+        }
+    }
+
+    function downloadFile(fileId) {
+
+        window.location.href = `/file/download/${fileId}?token=${JWT_TOKEN}`;
+    }
+</script>
+</body>
+</html>

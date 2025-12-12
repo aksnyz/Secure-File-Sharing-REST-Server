@@ -1,9 +1,5 @@
 use sqlx::{sqlite::SqlitePoolOptions, Pool, Sqlite};
-
-/// Initializes the database connection pool.
-/// Creates the database file if it doesn't exist.
 pub async fn init_db() -> Pool<Sqlite> {
-    // Connection string for SQLite. 'mode=rwc' allows reading, writing, and creating.
     let database_url = "sqlite://file_share.db?mode=rwc";
 
     let pool = SqlitePoolOptions::new()
@@ -12,14 +8,10 @@ pub async fn init_db() -> Pool<Sqlite> {
         .await
         .expect("Failed to connect to the database");
 
-    // Ensure all tables exist before starting the server
     create_tables(&pool).await;
 
     pool
 }
-
-/// Runs SQL migrations to create necessary tables.
-/// Requirement: Database Integration (Persistent schema) [cite: 67, 77]
 async fn create_tables(pool: &Pool<Sqlite>) {
     // 1. Users Table
     // Stores credentials securely.
