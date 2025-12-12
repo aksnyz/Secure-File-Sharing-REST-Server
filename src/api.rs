@@ -1,4 +1,3 @@
-// src/api.rs
 
 use axum::{
     extract::{Multipart, State},
@@ -21,7 +20,7 @@ use chrono::{Utc, Duration};
 use crate::models::User;
 use std::path::Path; // To handle file paths
 
-// --- DATA STRUCTURES ---
+//DATA STRUCTURES
 
 #[derive(Deserialize)]
 pub struct AuthRequest {
@@ -40,7 +39,7 @@ struct Claims {
     exp: usize,   // Expiration time
 }
 
-// --- HELPER: VERIFY TOKEN ---
+//HELPER: VERIFY TOKEN
 // Checks if the token is valid and returns the username
 fn verify_token(token: &str) -> Option<String> {
     let key = DecodingKey::from_secret("moj_sekretny_klucz".as_ref());
@@ -52,7 +51,7 @@ fn verify_token(token: &str) -> Option<String> {
     }
 }
 
-// --- FUNCTION 1: REGISTRATION ---
+//REGISTRATION
 
 pub async fn register_user(
     State(pool): State<Pool<Sqlite>>,
@@ -85,7 +84,7 @@ pub async fn register_user(
     }
 }
 
-// --- FUNCTION 2: LOGIN ---
+//LOGIN
 
 pub async fn login_user(
     State(pool): State<Pool<Sqlite>>,
@@ -130,7 +129,7 @@ pub async fn login_user(
     (StatusCode::OK, Json(LoginResponse { token })).into_response()
 }
 
-// --- FUNCTION 3: FILE UPLOAD ---
+//FILE UPLOAD
 
 pub async fn upload_file(
     State(pool): State<Pool<Sqlite>>,
