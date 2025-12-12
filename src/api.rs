@@ -1,4 +1,4 @@
-// 1. IMPORTS
+
 use axum::{
     extract::{Multipart, Path, State, Query},
     http::{header, HeaderMap, StatusCode},
@@ -20,7 +20,7 @@ use chrono::{Utc, Duration};
 use crate::models::{User, FileRecord};
 
 
-//DATA STRUCT
+//DATA STRUCTURES
 
 #[derive(Deserialize)]
 pub struct AuthRequest {
@@ -39,7 +39,8 @@ struct Claims {
     exp: usize,
 }
 
-//TOKEN VERIFICATION
+//HELPER: VERIFY TOKEN
+// Checks if the token is valid and returns the username
 fn verify_token(token: &str) -> Option<String> {
     let key = DecodingKey::from_secret("moj_sekretny_klucz".as_ref());
     let validation = Validation::default();
@@ -50,7 +51,8 @@ fn verify_token(token: &str) -> Option<String> {
     }
 }
 
-//REGISTER
+//REGISTRATION
+
 pub async fn register_user(
     State(pool): State<Pool<Sqlite>>,
     Json(payload): Json<AuthRequest>,
@@ -81,6 +83,7 @@ pub async fn register_user(
 }
 
 //LOGIN
+
 pub async fn login_user(
     State(pool): State<Pool<Sqlite>>,
     Json(payload): Json<AuthRequest>,
@@ -121,7 +124,8 @@ pub async fn login_user(
     (StatusCode::OK, Json(LoginResponse { token })).into_response()
 }
 
-//UPLOADING FILES
+//FILE UPLOAD
+
 pub async fn upload_file(
     State(pool): State<Pool<Sqlite>>,
     headers: HeaderMap,
@@ -176,110 +180,4 @@ pub async fn upload_file(
     }
 
     (StatusCode::OK, "File uploaded successfully").into_response()
-}
-
-//FILE LIST
-pub async fn list_files(
-    State(pool): State<Pool<Sqlite>>,
-    headers: HeaderMap,
-) -> impl IntoResponse {
-    let auth_header = headers.get(header::AUTHORIZATION)
-        .and_then(|h| h.to_str().ok())
-        .and_then(|h| h.strip_prefix("Bearer "));
-
-    let token = match auth_header {
-        Some(t) => t,
-        None => return (StatusCode::UNAUTHORIZED, Json("Missing token")).into_response(),
-    };
-
-    let username = match verify_token(token) {
-        Some(u) => u,
-        None => return (StatusCode::UNAUTHORIZED, Json("Invalid token")).into_response(),
-    };
-
-    let user_query = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
-        .bind(&username)
-        .fetch_optional(&pool)
-        .await;
-
-    let user = match user_query {
-        Ok(Some(u)) => u,
-        _ => return (StatusCode::UNAUTHORIZED, Json("User not found")).into_response(),
-    };
-
-    let files_result = sqlx::query_as::<_, FileRecord>("SELECT * FROM files WHERE owner_id = ?")
-        .bind(user.id)
-        .fetch_all(&pool)
-        .await;
-
-    match files_result {
-        Ok(files) => (StatusCode::OK, Json(files)).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json("Database error")).into_response(),
-    }
-}
-
-//DOWLOAD FILES
-pub async fn download_file(
-    State(pool): State<Pool<Sqlite>>,
-    headers: HeaderMap,
-    Path(file_id): Path<i32>,
-    query: Query<std::collections::HashMap<String, String>>,
-) -> Response {
-    let token_from_header = headers.get(header::AUTHORIZATION)
-        .and_then(|h| h.to_str().ok())
-        .and_then(|h| h.strip_prefix("Bearer "));
-
-    let token_from_query = query.get("token").map(|s| s.as_str());
-
-    let token = match token_from_header.or(token_from_query) {
-        Some(t) => t,
-        None => return (StatusCode::UNAUTHORIZED, "Missing token").into_response().into_response(),
-    };
-
-    let username = match verify_token(token) {
-        Some(u) => u,
-        None => return (StatusCode::UNAUTHORIZED, "Invalid token").into_response().into_response(),
-    };
-
-    let user_query = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
-        .bind(&username)
-        .fetch_optional(&pool)
-        .await;
-
-    let user = match user_query {
-        Ok(Some(u)) => u,
-        _ => return (StatusCode::INTERNAL_SERVER_ERROR, "User not found").into_response().into_response(),
-    };
-    let user_id = user.id.unwrap();
-
-    let file_record_query = sqlx::query_as::<_, FileRecord>("SELECT * FROM files WHERE id = ?")
-        .bind(file_id)
-        .fetch_optional(&pool)
-        .await;
-
-    let file_record = match file_record_query {
-        Ok(Some(f)) => f,
-        _ => return (StatusCode::NOT_FOUND, "File not found").into_response().into_response(),
-    };
-
-    let is_owner = file_record.owner_id == user_id;
-    let is_public = file_record.visibility == "public";
-
-    if !is_owner && !is_public {
-        return (StatusCode::FORBIDDEN, "Access denied.").into_response().into_response();
-    }
-
-    let file_data = match tokio::fs::read(&file_record.disk_path).await {
-        Ok(data) => data,
-        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "Failed to read file from disk").into_response().into_response(),
-    };
-
-    let filename_header = format!("attachment; filename=\"{}\"", file_record.name);
-
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(header::CONTENT_TYPE, "application/octet-stream")
-        .header(header::CONTENT_DISPOSITION, filename_header)
-        .body(file_data.into())
-        .unwrap_or_else(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to build response").into_response().into_response())
 }
