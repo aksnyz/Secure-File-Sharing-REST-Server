@@ -4,27 +4,20 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Web framework
+
 axum = { version = "0.7", features = ["multipart"] }
 
-# Asynchroniczność
 tokio = { version = "1", features = ["full"] }
 
-# JSON
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# Baza danych
 sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
 
-# Hasła
 argon2 = "0.5"
 rand_core = { version = "0.6", features = ["std"] }
 
-# Tokeny
 jsonwebtoken = "9"
 chrono = "0.4"
 
-# --- TO JEST NOWA CZĘŚĆ, KTÓREJ PRAWDOPODOBNIE BRAKUJE ---
-# Serwowanie plików statycznych (HTML/CSS)
 tower-http = { version = "0.5", features = ["fs"] }
