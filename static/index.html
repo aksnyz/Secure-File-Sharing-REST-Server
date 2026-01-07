@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pink Share Server</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* COLOR VARIABLES */
+        :root {
+            --primary: #f0768b;       /* Main Pink */
+            --primary-dark: #d74760;  /* 25% darker for hover */
+            --bg-color: #fdf2f4;      /* Light pink background */
+            --card-bg: #ffffff;       /* White card */
+            --text-main: #4a4a4a;     /* Dark gray text */
+            --border-radius: 15px;    /* Rounded corners */
+            --btn-radius: 25px;       /* Button corners */
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(240, 118, 139, 0.15);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            color: var(--text-main);
+            border-bottom: 2px solid #ffeef1;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            font-size: 1.2rem;
+        }
+
+        p {
+            text-align: center;
+            color: #888;
+            margin-top: 0;
+        }
+
+        /* INPUT STYLES */
+        input[type="text"], input[type="password"], input[type="file"] {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border: 2px solid #ffeef1;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: 0.3s;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(240, 118, 139, 0.2);
+        }
+
+        /* BUTTON STYLES */
+        button {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(240, 118, 139, 0.3);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(215, 71, 96, 0.4);
+        }
+
+        /* Small buttons for list */
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            margin-top: 0;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* FILE LIST STYLES */
+        ul {
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .file-entry {
+            background: #fff;
+            border: 1px solid #ffeef1;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .file-entry:hover {
+            border-color: var(--primary);
+            transform: scale(1.01);
+        }
+
+        .file-info b {
+            color: var(--text-main);
+            display: block;
+        }
+
+        .file-info span {
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        /* STATUS MESSAGES */
+        .status-msg {
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-weight: 600;
+            min-height: 20px;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ffeef1;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>File Cloud</h1>
+    <p id="main-status">Secure & Pink Storage</p>
+
+    <h2>1. Login / Register</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <div style="text-align: right;">
+        <button onclick="handleAuth('/register')" class="btn-outline">Register</button>
+        <button onclick="handleAuth('/login')">Login</button>
+    </div>
+    <div id="auth-status" class="status-msg"></div>
+
+    <h2>2. Upload File</h2>
+    <div style="background: #fdf2f4; padding: 20px; border-radius: 15px; border: 2px dashed #f0768b; text-align: center;">
+        <input type="file" id="file-input" style="border: none;">
+        <button onclick="uploadFile()" style="width: 100%;">Upload to Server</button>
+    </div>
+    <div id="upload-status" class="status-msg"></div>
+
+    <h2>3. Your Files</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color:#888;">Manage and share</span>
+        <button onclick="listFiles()" class="btn-small">Refresh List</button>
+    </div>
+
+    <div id="file-list-status" class="status-msg"></div>
+    <ul id="file-list">
+    </ul>
+</div>
+
+<script>
+    let JWT_TOKEN = localStorage.getItem('jwt_token') || null;
+
+    function updateStatus(elementId, message, color) {
+        const el = document.getElementById(elementId);
+        el.textContent = message;
+        // Aesthetic mapping: blue becomes pink
+        el.style.color = color === 'blue' ? '#f0768b' : color;
+    }
+
+    if (JWT_TOKEN) {
+        document.getElementById('main-status').textContent = "You are logged in.";
+        document.getElementById('main-status').style.color = "#f0768b";
+    }
+
+    // --- AUTH ---
+    async function handleAuth(endpoint) {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            const text = await response.text();
+            let data = {};
+            try { data = JSON.parse(text); } catch(e) {}
+
+            if (response.ok) {
+                updateStatus('auth-status', 'Success!', '#4CAF50');
+                if (data.token) {
+                    JWT_TOKEN = data.token;
+                    localStorage.setItem('jwt_token', JWT_TOKEN);
+                    updateStatus('auth-status', 'Logged in successfully.', '#4CAF50');
+                    listFiles();
+                }
+            } else {
+                updateStatus('auth-status', `Error: ${text}`, '#ff4444');
+            }
+        } catch (error) {
+            updateStatus('auth-status', `Network Error: ${error.message}`, '#ff4444');
+        }
+    }
+
+    // --- UPLOAD ---
+    async function uploadFile() {
+        if (!JWT_TOKEN) return updateStatus('upload-status', 'You must log in first.', '#ff4444');
+
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (!file) return updateStatus('upload-status', 'Please select a file.', '#ff4444');
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('filename', file.name);
+
+        try {
+            updateStatus('upload-status', 'Uploading...', '#f0768b');
+            const response = await fetch('/file/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${JWT_TOKEN}` },
+                body: formData
+            });
+
+            if (response.ok) {
+                updateStatus('upload-status', 'File uploaded successfully!', '#4CAF50');
+                fileInput.value = '';
+                listFiles();
+            } else {
+                const text = await response.text();
+                updateStatus('upload-status', `Error: ${text}`, '#ff4444');
+            }
+        } catch (error) {
+            updateStatus('upload-status', `Error: ${error.message}`, '#ff4444');
+        }
+    }
+
+    // --- LIST & DOWNLOAD ---
+    async function listFiles() {
+        if (!JWT_TOKEN) return updateStatus('file-list-status', 'Log in to view files.', '#ff4444');
+        const listUl = document.getElementById('file-list');
+        listUl.innerHTML = '';
+
+        try {
+            const response = await fetch('/file/list', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${JWT_TOKEN}` }
+            });
+
+            if (response.ok) {
+                const files = await response.json();
+                updateStatus('file-list-status', `Files found: ${files.length}`, '#4CAF50');
+
+                files.forEach(file => {
+                    const li = document.createElement('li');
+                    li.className = 'file-entry';
+
+                    // English buttons without emojis
+                    li.innerHTML = `
+                            <div class="file-info">
+                                <b>${file.name}</b>
+                                <span>ID: ${file.id}</span>
+                            </div>
+                            <div>
+                                <button onclick="shareFile(${file.id})" class="btn-small btn-outline">Share</button>
+                                <button onclick="downloadFile(${file.id})" class="btn-small">Download</button>
+                            </div>
+                        `;
+                    listUl.appendChild(li);
+                });
+            } else {
+                updateStatus('file-list-status', 'Failed to fetch list.', '#ff4444');
+            }
+        } catch (error) {
+            updateStatus('file-list-status', `Error: ${error.message}`, '#ff4444');
+        }
+    }
+
+    // --- SHARE ---
+    async function shareFile(fileId) {
+        const targetUser = prompt("Who do you want to share this file with? (Enter username):");
+        if (!targetUser) return;
+
+        try {
+            const response = await fetch('/file/share', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${JWT_TOKEN}`
+                },
+                body: JSON.stringify({ file_id: fileId, target_username: targetUser })
+            });
+
+            const text = await response.text();
+            if (response.ok) {
+                alert("Success: File shared!");
+            } else {
+                alert("Error: " + text);
+            }
+        } catch (error) {
+            alert("Network Error: " + error.message);
+        }
+    }
+
+    function downloadFile(fileId) {
+        window.location.href = `/file/download/${fileId}?token=${JWT_TOKEN}`;
+    }
+</script>
+</body>
+</html>

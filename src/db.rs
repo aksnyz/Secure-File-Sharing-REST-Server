@@ -21,8 +21,8 @@ pub async fn init_db() -> Pool<Sqlite> {
 /// Runs SQL migrations to create necessary tables.
 /// Requirement: Database Integration (Persistent schema) [cite: 67, 77]
 async fn create_tables(pool: &Pool<Sqlite>) {
-    // 1. Users Table
-    // Stores credentials securely.
+    //Users Table
+    //Stores credentials securely.
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,8 +34,8 @@ async fn create_tables(pool: &Pool<Sqlite>) {
         .await
         .expect("Failed to create users table");
 
-    // 2. Files Table
-    // Stores file metadata and ownership info.
+    //Files Table
+    //Stores file metadata and ownership info.
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,8 +50,8 @@ async fn create_tables(pool: &Pool<Sqlite>) {
         .await
         .expect("Failed to create files table");
 
-    // 3. Permissions Table
-    // Handles sharing logic (Many-to-Many relationship).
+    //Permissions Table
+    //Handles sharing logic (Many-to-Many relationship).
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS file_permissions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
