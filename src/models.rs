@@ -1,24 +1,22 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
-// --- USER MODEL ---
-// Represents a registered user in the database.
-// Requirement: User Registration & Login [cite: 57, 58]
-#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
+// this struct represents a single user in our database
+#[derive(Debug, Serialize, FromRow)]
 pub struct User {
-    pub id: Option<i32>,          // Auto-incremented ID
-    pub username: String,         // Unique username
-    pub password_hash: String,    // Securely hashed password (Argon2)
+    pub id: Option<i32>,
+    pub username: String,
+    // store hash not the real password for security
+    pub password_hash: String,
 }
 
-// --- FILE MODEL ---
-// Represents a file uploaded to the server.
-// Requirement: File Upload with metadata [cite: 60]
-#[derive(Debug, Serialize, Deserialize, Clone, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct FileRecord {
-    pub id: Option<i32>,
-    pub owner_id: i32,            // Foreign key linking to User
-    pub name: String,             // Original filename
-    pub disk_path: String,        // Path where the file is stored physically
-    pub visibility: String,       // 'private', 'public', or 'shared'
+    pub id: i32,
+    pub owner_id: i32,
+    pub name: String,
+    // path where the file is actually saved on the server hard drive
+    pub disk_path: String,
+    // determines if file is private or public
+    pub visibility: String,
 }
