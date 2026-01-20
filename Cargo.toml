@@ -7,23 +7,23 @@ edition = "2021"
 # Web framework
 axum = { version = "0.7", features = ["multipart"] }
 
-# Asynchroniczność
+# Asynchronicity
 tokio = { version = "1", features = ["full"] }
 
 # JSON
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# Baza danych
+# Data Base
 sqlx = { version = "0.7", features = ["runtime-tokio", "sqlite"] }
 
-# Hasła
+# Passwords
 argon2 = "0.5"
 rand_core = { version = "0.6", features = ["std"] }
 
-# Tokeny
+# Tokens
 jsonwebtoken = "9"
 chrono = "0.4"
 
-# Serwowanie plików statycznych (HTML/CSS)
+# Static files HTML CSS
 tower-http = { version = "0.5", features = ["fs"] }
